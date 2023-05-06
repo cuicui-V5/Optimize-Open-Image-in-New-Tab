@@ -1,10 +1,12 @@
 
 // ==UserScript==
-// @name         optimize-open-image-in-new-tab
-// @namespace    optimize-open-image-in-new-tab
-// @version      0.0.1
-// @include      *
-// @run-at       document-end
+// @name           optimize-open-image-in-new-tab
+// @namespace      optimize-open-image-in-new-tab
+// @version        0.0.1
+// @description    This practical Greasemonkey script enhances the functionality of opening images in new tabs by adding a viewing feature that enables users to conveniently zoom in or out, view in full screen mode, 
+// @include        *
+// @run-at         document-end
+// @license        MIT
 // ==/UserScript==
 (function () {
     'use strict';

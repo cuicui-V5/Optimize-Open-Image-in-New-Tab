@@ -3,7 +3,7 @@
 一个实用的油猴脚本, 为新标签页打开的图片添加查看器功能, 可以方便进行的放大缩小,全屏观看等功能
 此项目使用了 https://github.com/nextapps-de/spotlight
 
-安装链接:
+安装链接: https://greasyfork.org/zh-CN/scripts/465648-optimize-open-image-in-new-tab
 
 ## 优点
 
@@ -16,7 +16,7 @@
 
 This practical Greasemonkey script enhances the functionality of opening images in new tabs by adding a viewing feature that enables users to conveniently zoom in or out, view in full screen mode, and more. The project utilizes https://github.com/nextapps-de/spotlight.
 
-Installation link:
+Installation link: https://greasyfork.org/zh-CN/scripts/465648-optimize-open-image-in-new-tab
 
 ## Advantages
 

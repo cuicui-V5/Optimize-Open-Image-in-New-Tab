@@ -1,4 +1,6 @@
 {
-  "@include": "*",
-  "@run-at": "document-end"
+    "@include": "*",
+    "@run-at": "document-end",
+    "@description": "This practical Greasemonkey script enhances the functionality of opening images in new tabs by adding a viewing feature that enables users to conveniently zoom in or out, view in full screen mode, ",
+    "@license": "MIT"
 }
