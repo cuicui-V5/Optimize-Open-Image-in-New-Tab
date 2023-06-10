@@ -12,31 +12,47 @@
     'use strict';
 
     /**
-     * @param node
-     * @param class_name
+     * @param {HTMLElement} node
+     * @param {string} class_name
      */
 
     function addClass(node, class_name) {
-      toggleClass(node, class_name, true);
+      node.classList.add(class_name);
     }
 
     /**
-     * @param node
-     * @param class_name
+     * @param {HTMLElement} node
+     * @param {string} class_name
      */
 
     function removeClass(node, class_name) {
-      toggleClass(node, class_name);
+      node.classList.remove(class_name);
     }
 
     /**
-     * @param node
-     * @param class_name
-     * @param {?=} state
+     * @param {HTMLElement} node
+     * @param {string} class_name
+     * @param state
      */
 
     function toggleClass(node, class_name, state) {
-      node.classList[state ? "add" : "remove"](class_name);
+      if (state) {
+        addClass(node, class_name);
+      } else {
+        removeClass(node, class_name);
+      }
+    }
+
+    /**
+     * @param {HTMLElement} node
+     */
+
+    function restoreStyle(node) {
+      for (var key in node) {
+        if (key.startsWith("_s_")) {
+          node.style.setProperty(key.substring(3), node[key]);
+        }
+      }
     }
 
     /**
@@ -55,7 +71,7 @@
     let tmp = 0;
 
     /**
-     * @param node
+     * @param {HTMLElement} node
      * @param {Function=} fn
      */
 
@@ -70,6 +86,12 @@
 
       fn && setStyle(node, "transition", "");
     }
+
+    /**
+     * @param {HTMLElement} node
+     * @param {string} text
+     */
+
     function setText(node, text) {
       node.firstChild.nodeValue = text;
     }
@@ -108,7 +130,7 @@
     }
 
     /**
-     * @param event
+     * @param {Event} event
      * @param {boolean=} prevent
      */
 
@@ -117,6 +139,12 @@
       //event.stopImmediatePropagation();
       prevent && event.preventDefault();
     }
+
+    /**
+     * @param {HTMLBodyElement} body
+     * @param {HTMLElement} image
+     */
+
     function downloadImage(body, image) {
       const link = /** @type {HTMLAnchorElement} */createElement("a");
       const src = image.src;
@@ -129,15 +157,16 @@
 
     /**
      * @param {!string} element
-     * @return {Element}
+     * @return {HTMLElement}
      */
 
     function createElement(element) {
-      return document.createElement(element);
+      return (/** @type {HTMLElement} */document.createElement(element)
+      );
     }
 
     /**
-     * @param node
+     * @param {HTMLElement} node
      * @param {boolean=} state
      */
 
@@ -146,7 +175,7 @@
     }
 
     /**
-     * @param node
+     * @param {HTMLElement} node
      * @param {boolean=} state
      */
 
@@ -155,7 +184,7 @@
     }
 
     /**
-     * @param node
+     * @param {HTMLElement} node
      * @param {boolean=} state
      */
 
@@ -217,6 +246,16 @@
 
     const video_support = {};
     const tpl_video = /** @type {HTMLVideoElement} */createElement("video");
+
+    /**
+     *
+     * @param {HTMLAnchorElement} anchor
+     * @param {number} size
+     * @param options
+     * @param {string} media
+     * @returns {string}
+     */
+
     function parse_src (anchor, size, options, media) {
       let src, diff;
       if (media !== "node") {
@@ -266,19 +305,39 @@
     const controls_dom = {};
     const connection = navigator["connection"];
     const dpr = window["devicePixelRatio"] || 1;
+
+    /** @type {number} */
     let x;
+    /** @type {number} */
     let y;
+    /** @type {number} */
     let startX;
+    /** @type {number} */
     let startY;
+    /** @type {number} */
     let viewport_w;
+    /** @type {number} */
     let viewport_h;
+    /** @type {number} */
     let media_w;
+    /** @type {number} */
     let media_h;
+    /** @type {number} */
     let scale;
+    /** @type {TouchList|undefined} */
+    let prev_touches;
+
+    /** @type {boolean} */
     let is_down;
+    /** @type {boolean} */
     let dragged;
+    /** @type {boolean} */
     let slidable;
+    /** @type {boolean} */
+    let is_sliding_up;
+    /** @type {boolean} */
     let toggle_autofit;
+    /** @type {string} */
     let toggle_theme;
     let current_slide;
     let slide_count;
@@ -304,24 +363,43 @@
     let animation_fade;
     let animation_slide;
     let animation_custom;
+
+    /** @type {HTMLBodyElement} */
     let body;
+    /** @type {HTMLDivElement?} */
     let panel;
+    /** @type {Array<HTMLDivElement>} */
     let panes;
+    /** @type {Image|HTMLVideoElement|HTMLElement} */
     let media;
-    let media_next = createElement("img");
+    let media_next = /** @type {HTMLImageElement} */createElement("img");
+    /** @type {HTMLDivElement} */
     let slider;
+    /** @type {HTMLDivElement} */
     let header;
+    /** @type {HTMLDivElement} */
     let footer;
-    let footer_visible = 0;
+    /** @type {boolean} */
+    let footer_visible = false;
+    /** @type {HTMLDivElement} */
     let title;
+    /** @type {HTMLDivElement} */
     let description;
+    /** @type {HTMLDivElement} */
     let button;
+    /** @type {HTMLDivElement} */
     let page_prev;
+    /** @type {HTMLDivElement} */
     let page_next;
+    /** @type {HTMLDivElement?} */
     let maximize;
+    /** @type {HTMLDivElement} */
     let page;
+    /** @type {HTMLDivElement} */
     let player;
+    /** @type {HTMLDivElement} */
     let progress;
+    /** @type {HTMLDivElement} */
     let spinner;
     let gallery;
     let gallery_next;
@@ -402,24 +480,36 @@
 
       /**
        * @param {string} classname
-       * @returns {HTMLElement}
+       * @returns {HTMLDivElement}
        */
 
       function getOneByClass(classname) {
         //console.log("getOneByClass", classname);
 
-        return controls_dom[classname] = getByClass("spl-" + classname, template)[0];
+        return controls_dom[classname] = /** @type {HTMLDivElement} */getByClass("spl-" + classname, template)[0];
       }
     }
+
+    /**
+     * @param {string} classname
+     * @param {Function} fn
+     * @returns {HTMLDivElement}
+     */
+
     function addControl(classname, fn) {
       //console.log("addControl", classname, fn);
 
-      const div = createElement("div");
+      const div = /** @type {HTMLDivElement} */createElement("div");
       div.className = "spl-" + classname;
       addListener(div, "click", fn);
       header.appendChild(div);
       return controls_dom[classname] = div;
     }
+
+    /**
+     * @param {string} classname
+     */
+
     function removeControl(classname) {
       //console.log("dispatch", classname);
 
@@ -429,10 +519,18 @@
         controls_dom[classname] = null;
       }
     }
+
+    /**
+     * @param {Event} event
+     */
+
     function dispatch(event) {
       //console.log("dispatch");
 
-      const target = event.target.closest(".spotlight");
+      if (is_sliding_up) {
+        return;
+      }
+      const target = /** @type {HTMLDivElement?} */event.target.closest(".spotlight");
       if (target) {
         cancelEvent(event, true);
         const group = target.closest(".spotlight-group");
@@ -469,6 +567,11 @@
       }
       init_gallery(index);
     }
+
+    /**
+     * @param {number} index
+     */
+
     function init_gallery(index) {
       //console.log("init_gallery", index);
 
@@ -611,6 +714,11 @@
         animation_custom && addClass(media, animation_custom);
       }
     }
+
+    /**
+     * @param {number} index
+     */
+
     function init_slide(index) {
       //console.log("init_slide", index);
 
@@ -662,10 +770,12 @@
         } else if (type === "node") {
           media = gallery.src;
           if (typeof media === "string") {
-            media = document.querySelector(media);
+            media = /** @type {HTMLElement} */document.querySelector(media);
           }
           if (media) {
             media._root || (media._root = media.parentNode);
+            media._style || (media._style = media.getAttribute("style"));
+            restoreStyle(media);
             update_media_viewport();
             panel.appendChild(media);
             init_slide(index);
@@ -711,6 +821,11 @@
 
       options_spinner && toggleClass(spinner, "spin", is_on);
     }
+
+    /**
+     * @returns {boolean}
+     */
+
     function has_fullscreen() {
       //console.log("has_fullscreen");
 
@@ -808,6 +923,11 @@
       toggleListener(install, window, "resize", resize_listener);
       toggleListener(install, window, "popstate", history_listener);
     }
+
+    /**
+     * @param {PopStateEvent} event
+     */
+
     function history_listener(event) {
       //console.log("history_listener");
 
@@ -815,6 +935,11 @@
         close(true);
       }
     }
+
+    /**
+     * @param {KeyboardEvent} event
+     */
+
     function key_listener(event) {
       //console.log("key_listener");
 
@@ -852,6 +977,11 @@
         }
       }
     }
+
+    /**
+     * @param {WheelEvent} event
+     */
+
     function wheel_listener(event) {
       //console.log("wheel_listener");
 
@@ -859,9 +989,9 @@
         let delta = event["deltaY"];
         delta = (delta < 0 ? 1 : delta ? -1 : 0) * 0.5;
         if (delta < 0) {
-          zoom_out();
-        } else {
-          zoom_in();
+          zoom_out(event, event.clientX, event.clientY);
+        } else if (delta > 0) {
+          zoom_in(event, event.clientX, event.clientY);
         }
       }
     }
@@ -914,6 +1044,11 @@
         }
       }
     }
+
+    /**
+     * @param {number} cooldown
+     */
+
     function schedule(cooldown) {
       //console.log("schedule", cooldown);
 
@@ -945,25 +1080,41 @@
         autohide();
       }
     }
+
+    /**
+     * @param {TouchEvent|MouseEvent} e
+     */
+
     function start(e) {
       //console.log("start");
 
       cancelEvent(e, true);
       is_down = true;
       dragged = false;
+      is_sliding_up = false;
+
+      /** @type {TouchEvent|MouseEvent|Touch}  */
+      let touch = e;
       let touches = e.touches;
+      prev_touches = touches;
       if (touches && (touches = touches[0])) {
-        e = touches;
+        touch = touches;
       }
       slidable = /* !toggle_autofit && */media_w * scale <= viewport_w;
-      startX = e.pageX;
-      startY = e.pageY;
+      startX = touch.pageX;
+      startY = touch.pageY;
       toggleAnimation(panel);
     }
+
+    /**
+     * @param {TouchEvent|MouseEvent} e
+     */
+
     function end(e) {
       //console.log("end");
 
       cancelEvent(e);
+      prev_touches = null;
       if (is_down) {
         if (!dragged) {
           menu();
@@ -975,7 +1126,12 @@
               update_slider(current_slide - 1, /* prepare? */true, x / viewport_w * 100);
               has_next && next() || has_prev && prev();
             }
-            x = 0;
+            if (is_sliding_up && y < -(viewport_h / 4)) {
+              close();
+            } else {
+              x = 0;
+              y = 0;
+            }
             update_panel();
           }
           toggleAnimation(panel, true);
@@ -983,21 +1139,64 @@
         is_down = false;
       }
     }
+
+    /**
+     * @param {TouchList} touches
+     * @returns {number}
+     */
+
+    function distance(touches) {
+      return Math.sqrt(Math.pow(touches[0].clientX - touches[1].clientX, 2) + Math.pow(touches[0].clientY - touches[1].clientY, 2));
+    }
+
+    /**
+     * @param {TouchList} touches
+     */
+    function center_of(touches) {
+      return [(touches[0].clientX + touches[1].clientX) * 0.5, (touches[0].clientY + touches[1].clientY) * 0.5];
+    }
+
+    /**
+     * @param {TouchList=} touches
+     */
+
+    function scale_touches(touches) {
+      if (options["zoom-in"] !== false && touches && touches.length === 2 && prev_touches && prev_touches.length === 2) {
+        const relative_scale = distance(touches) / distance(prev_touches);
+        const center = center_of(touches);
+        centered_zoom(relative_scale, center[0], center[1], false);
+      }
+      prev_touches = touches;
+      return touches && touches[0];
+    }
+
+    /**
+     * @param {TouchEvent|MouseEvent} e
+     */
+
     function move(e) {
       //console.log("move");
 
       cancelEvent(e);
       if (is_down) {
-        let touches = e.touches;
-        if (touches && (touches = touches[0])) {
+        let touches = scale_touches(e.touches);
+        if (touches) {
           e = touches;
         }
-
-        // handle x-axis in slide mode and in drag mode
-
-        let diff = (media_w * scale - viewport_w) / 2;
-        x -= startX - (startX = e.pageX);
+        if (!dragged) {
+          const dx = startX - e.pageX;
+          const dy = startY - e.pageY;
+          is_sliding_up = slidable && dy > Math.abs(dx) * 1.15;
+        }
+        if (is_sliding_up) {
+          // handle y-axis in y-slide mode
+          y -= startY - (startY = e.pageY);
+        } else {
+          // handle x-axis in x-slide mode and in drag mode
+          x -= startX - (startX = e.pageX);
+        }
         if (!slidable) {
+          let diff = (media_w * scale - viewport_w) / 2;
           if (x > diff) {
             x = diff;
           } else if (x < -diff) {
@@ -1086,58 +1285,72 @@
     }
 
     /**
-     * @param {Event=} e
+     * @param {number} relative
+     * @param {number=} cx
+     * @param {number=} cy
+     * @param {boolean=} animated
      */
 
-    function zoom_in(e) {
-      //console.log("zoom_in");
+    function centered_zoom(relative, cx, cy, animated) {
+      let value = scale * relative;
+      toggleAnimation(panel, animated);
+      toggleAnimation(media, animated);
+      disable_autoresizer();
+      if (value <= 1) {
+        x = y = 0;
+        update_panel(x, y);
+        zoom(1);
 
-      let value = scale / 0.65;
-      if (value <= 50) {
-        //console.log(toggle_autofit);
+        // if(options_fit){
+        //
+        //     addClass(media, options_fit);
+        // }
 
-        disable_autoresizer();
-
+        return;
+      }
+      if (value > 50) {
         // if(options_fit){
         //
         //     removeClass(media, options_fit);
         // }
 
-        x /= 0.65;
-        y /= 0.65;
-        update_panel(x, y);
-        zoom(value);
+        return;
       }
-
-      //e && autohide();
+      if (cy) {
+        const half_w = viewport_w / 2,
+          half_h = viewport_h / 2;
+        x = cx - (cx - x - half_w) * relative - half_w;
+        y = cy - (cy - y - half_h) * relative - half_h;
+      } else {
+        x *= relative;
+        y *= relative;
+      }
+      update_panel(x, y);
+      zoom(value);
     }
 
     /**
      * @param {Event=} e
+     * @param {number=} cx
+     * @param {number=} cy
      */
 
-    function zoom_out(e) {
+    function zoom_in(e, cx, cy) {
+      //console.log("zoom_in");
+
+      centered_zoom(1 / 0.65, cx, cy, true);
+    }
+
+    /**
+     * @param {Event=} e
+     * @param {number=} cx
+     * @param {number=} cy
+     */
+
+    function zoom_out(e, cx, cy) {
       //console.log("zoom_out");
 
-      let value = scale * 0.65;
-      disable_autoresizer();
-      if (value >= 1) {
-        if (value === 1) {
-          x = y = 0;
-
-          // if(options_fit){
-          //
-          //     addClass(media, options_fit);
-          // }
-        } else {
-          x *= 0.65;
-          y *= 0.65;
-        }
-        update_panel(x, y);
-        zoom(value);
-      }
-
-      //e && autohide();
+      centered_zoom(0.65, cx, cy, true);
     }
 
     /**
@@ -1202,6 +1415,7 @@
       setTimeout(function () {
         body.removeChild(template);
         panel = media = gallery = options = options_group = anchors = options_onshow = options_onchange = options_onclose = options_click = null;
+        is_sliding_up = false;
       }, 200);
       removeClass(body, "hide-scrollbars");
       removeClass(template, "show");
@@ -1219,16 +1433,23 @@
       options_class && removeClass(template, options_class);
       options_onclose && options_onclose();
     }
+
+    /**
+     * @param {Image|HTMLVideoElement|HTMLElement} media
+     */
+
     function checkout(media) {
       //console.log("checkout");
 
       if (media._root) {
+        media.setAttribute("style", media._style || "");
         media._root.appendChild(media);
-        media._root = null;
+        media._root = media._style = null;
       } else {
         const parent = media.parentNode;
         parent && parent.removeChild(media);
-        media = media.src = media.onerror = "";
+        media.onerror = null;
+        media.src = "";
       }
     }
 
@@ -1269,6 +1490,12 @@
         }
       }
     }
+
+    /**
+     * @param {number} slide
+     * @returns {boolean|undefined}
+     */
+
     function goto(slide) {
       //console.log("goto", slide);
 
@@ -1290,6 +1517,11 @@
         return true;
       }
     }
+
+    /**
+     * @param {boolean} direction
+     */
+
     function prepare(direction) {
       //console.log("prepare", direction);
 
@@ -1329,6 +1561,11 @@
         toggleDisplay(controls_dom[option], parse_option(option, controls_default[option]));
       }
     }
+
+    /**
+     * @param {boolean} direction
+     */
+
     function setup_page(direction) {
       //console.log("setup_page", direction);
 
@@ -1355,7 +1592,7 @@
           update_panel();
         }
       }
-      footer && toggleVisibility(footer, 0);
+      footer && toggleVisibility(footer, false);
       prepare(direction);
       update_slider(current_slide - 1);
       removeClass(spinner, "error");
